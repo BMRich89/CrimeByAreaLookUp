@@ -1,0 +1,6 @@
+@CrimeStatistics_HostAddress = http://localhost:5079
+
+GET {{CrimeStatistics_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
