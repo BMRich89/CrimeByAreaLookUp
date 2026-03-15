@@ -1,4 +1,7 @@
 
+using System.Text.Json;
+using CrimeStatistics.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -45,9 +48,31 @@ app.MapGet("/CrimeByPostcode", async (string postcode) =>
     Tuple<string, string> LatLong = await postCodeService.GetPostCodeCoordinates(postcode);
 
     var crimeService = app.Services.GetRequiredService<CrimeService>();
-    var result = await crimeService.FetchCrimeDataByCoordinates(LatLong.Item1, LatLong.Item2);
+    var crimeJson = await crimeService.FetchCrimeDataByCoordinates(LatLong.Item1, LatLong.Item2);
 
-    return result;
+    if (!double.TryParse(LatLong.Item1, out var centerLat) || !double.TryParse(LatLong.Item2, out var centerLng))
+    {
+        return Results.Problem("Invalid coordinates returned for postcode.");
+    }
+
+    JsonElement crimes;
+    try
+    {
+        crimes = JsonSerializer.Deserialize<JsonElement>(crimeJson);
+    }
+    catch (JsonException)
+    {
+        return Results.Problem("Failed to parse crime data from upstream API.");
+    }
+
+    var response = new CrimeSearchResponse
+    {
+        SearchCenterLat = centerLat,
+        SearchCenterLng = centerLng,
+        Crimes = crimes
+    };
+
+    return Results.Ok(response);
 })
 .WithName("CrimeByPostcode");
 
