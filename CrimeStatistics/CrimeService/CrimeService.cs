@@ -1,6 +1,9 @@
 ﻿
+using CrimeStatistics.CrimeService;
+using CrimeStatistics.PostCodeService;
 using Microsoft.Extensions.Options;
 using System.Net.Http;
+using System.Text.Json;
 
 //TODO: add abstract for API Services i.e postcode and crime
 internal class CrimeService
@@ -11,6 +14,15 @@ internal class CrimeService
     {
         _httpClientFactory = httpClientFactory;
         _settings = options.Value;
+    }
+
+    internal async Task<CrimeData[]> FetchCrimeByCategoryByPostcode(string lat, string @long)
+    {
+        var crimeForPostcode = await FetchCrimeDataByCoordinates(lat, @long);
+        
+        var results = JsonSerializer.Deserialize<CrimeData[]>(crimeForPostcode);
+
+        return results;
     }
 
     internal async Task<string> FetchCrimeDataByCoordinates(string lat, string @long)

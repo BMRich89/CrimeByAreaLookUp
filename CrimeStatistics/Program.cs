@@ -25,19 +25,13 @@ var summaries = new[]
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/postcode", (string postcode) =>
 {
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
+    var postCodeService = app.Services.GetRequiredService<PostCodeService>();
+    var result = postCodeService.GetPostCodeCoordinates(postcode);
+    return result;
 })
-.WithName("GetWeatherForecast");
+.WithName("");
 
 app.MapGet("/CrimeByPostcode", async (string postcode) =>
 {
@@ -58,6 +52,23 @@ app.MapGet("/CrimeByPostcode", async (string postcode) =>
 .WithName("CrimeByPostcode");
 
 
+app.MapGet("/CrimeByCategoryByPostcode", async (string postcode) =>
+{
+    //TODO: Create validation service
+    var isPostcodeValid = !string.IsNullOrWhiteSpace(postcode) && postcode.Length >= 5 && postcode.Length <= 10;
+    if (!isPostcodeValid)
+    {
+        //TODO
+    }
+    var postCodeService = app.Services.GetRequiredService<PostCodeService>();
+    Tuple<string, string> LatLong = await postCodeService.GetPostCodeCoordinates(postcode);
+
+    var crimeService = app.Services.GetRequiredService<CrimeService>();
+    var result = await crimeService.FetchCrimeByCategoryByPostcode(LatLong.Item1, LatLong.Item2);
+
+    return result;
+})
+.WithName("CrimeByCategoryByPostcode");
 
 app.Run();
 
