@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  crimestatistics:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+    container_name: crime-statistics-api
